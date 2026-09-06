@@ -1,0 +1,780 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Papercraft Sales — browse the deals</title>
+<style>
+:root{ color-scheme: light dark;
+  --bg:#faf7f5; --card:#fff; --ink:#1c1a19; --mut:#8a807b; --line:#e7ded9;
+  --brand:#b5477e; --brand2:#7a3b8f; --pink:#d6336c; --chip:#f1e8ee; --gold:#ffd43b; }
+@media (prefers-color-scheme: dark){ :root{
+  --bg:#171514; --card:#221f1d; --ink:#ece8e6; --mut:#9b918c; --line:#38322f;
+  --chip:#2c2530; } }
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+header{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:16px 18px}
+header h1{margin:0;font-size:19px}
+header .sub{opacity:.9;font-size:12.5px;margin-top:2px}
+.event{background:#fff3f6;color:#7a1738;border-left:4px solid var(--pink);padding:9px 12px;border-radius:7px;margin:10px 0 0;font-size:13.5px;cursor:pointer}
+.event:hover{background:#ffe6ee}
+.event .ev-go{font-weight:700;white-space:nowrap;margin-left:2px}
+@media (prefers-color-scheme: dark){.event{background:#2a1f26;color:#f3c3d4}.event:hover{background:#3a2b33}}
+/* New Releases reuses the filter bar, minus the sale-only controls */
+body.mnew .dealonly{display:none}
+.controls{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=search],select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+input[type=search]{flex:1;min-width:150px}
+.toggle{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:13.5px}
+.toggle input{accent-color:var(--brand)}
+.toggle.price{gap:8px}
+.toggle.price input[type=range]{width:120px;accent-color:var(--brand)}
+.reset{font:inherit;font-size:13.5px;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);cursor:pointer}
+.reset:hover{border-color:var(--brand);color:var(--brand)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.chip.zero{opacity:.35}
+.themechips{margin-top:6px}
+.chiplabel{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;align-self:center;margin-right:2px}
+.chip.theme{background:transparent;border-style:dashed}
+.chip.theme.on{background:var(--brand);color:#fff;border-style:solid;border-color:var(--brand)}
+.chip .n{opacity:.6;margin-left:4px}
+.count{padding:10px 14px 2px;color:var(--mut);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;padding:12px 14px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.card:hover{border-color:var(--brand)}
+.thumb{position:relative;aspect-ratio:1/1;background:#efe7e2 center/cover no-repeat}
+@media (prefers-color-scheme: dark){.thumb{background:#2c2724}}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.badges-l{position:absolute;top:7px;left:7px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.badges-r{position:absolute;top:7px;right:7px;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.badge{background:var(--pink);color:#fff;font-weight:700;font-size:12px;padding:2px 7px;border-radius:6px}
+.new{background:#2b8a3e;color:#fff;font-weight:700;font-size:10.5px;padding:2px 6px;border-radius:6px;letter-spacing:.3px}
+.low{background:#1971c2;color:#fff;font-weight:700;font-size:10px;padding:2px 6px;border-radius:6px;letter-spacing:.3px}
+.lastchance{background:#e8590c;color:#fff;font-weight:700;font-size:10px;padding:2px 6px;border-radius:6px;white-space:nowrap}
+.daily{background:#c92a2a;color:#fff;font-weight:700;font-size:10px;padding:2px 6px;border-radius:6px;white-space:nowrap}
+.bestprice{background:#2b8a3e;color:#fff;font-weight:700;font-size:10px;padding:2px 6px;border-radius:6px;white-space:nowrap}
+.cheaper{color:#2b8a3e;font-size:11.5px;font-weight:600}
+.hist{color:#868e96;font-size:11px;font-weight:600}
+.th-tag{position:absolute;bottom:7px;left:7px;background:var(--gold);color:#5c4400;font-weight:700;font-size:10.5px;padding:2px 6px;border-radius:6px}
+.meta{padding:8px 10px 10px;display:flex;flex-direction:column;gap:3px;flex:1}
+.tt{font-size:13px;font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pr{font-size:13px;margin-top:auto}
+.pr s{color:var(--mut);font-weight:400}
+.pr b{color:var(--pink)}
+.shop{font-size:11.5px;color:var(--mut)}
+.more{display:block;margin:6px auto 60px;padding:10px 20px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);cursor:pointer;font:inherit}
+.empty{padding:40px 14px;text-align:center;color:var(--mut)}
+.hrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.mylist-btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.55);color:#fff;border-radius:8px;padding:8px 13px;cursor:pointer;font:inherit;font-weight:600;white-space:nowrap}
+.mylist-btn:hover{background:rgba(255,255,255,.3)}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.thintro{padding:14px 14px 2px}
+.thintro h2{margin:0 0 4px;font-size:18px}
+.thintro p{margin:0;color:var(--mut);font-size:13.5px;line-height:1.5}
+.calrow{display:flex;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:flex-start}
+.calrow.soon{background:#fff3f6}
+@media (prefers-color-scheme: dark){.calrow.soon{background:#2a1f26}}
+.calmon{min-width:88px;font-weight:700;color:var(--brand)}
+.calshops{font-size:12.5px;color:var(--mut);margin-top:2px}
+.calnote{font-size:13px;margin-top:3px}
+.soontag{background:var(--pink);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:middle}
+.calrow.disc{border-left:3px solid var(--brand)}
+.disctag{background:var(--brand);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:middle}
+#coupview{padding:0 10px 50px}
+.coupgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.coup{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--card);display:flex;flex-direction:column;gap:8px}
+.coup .cshop{font-size:12.5px;color:var(--mut);font-weight:600}
+.coup .coffer{font-size:14px;font-weight:600;line-height:1.35}
+.coupcode{display:flex;align-items:center;gap:8px}
+.coupcode code{font:700 15px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.5px;background:#fff3f6;color:#c92a5b;border:1px dashed #f0a5c0;border-radius:7px;padding:8px 10px;flex:1;text-align:center}
+@media (prefers-color-scheme: dark){.coupcode code{background:#2a1f26;border-color:#7a3450;color:#ff9ec2}}
+.copybtn{border:none;background:var(--brand);color:#fff;border-radius:7px;padding:8px 12px;font:inherit;font-weight:600;cursor:pointer}
+.copybtn.done{background:#2f9e44}
+.coup a.cvisit{font-size:12.5px;color:var(--brand);text-decoration:none;font-weight:600}
+.coup.creator{border-color:#c792ea;background:linear-gradient(180deg,rgba(199,146,234,.07),transparent)}
+.ctag{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:800;letter-spacing:.4px;color:#fff;background:#9c5cd0;border-radius:5px;padding:1px 5px;vertical-align:middle}
+.cvia{font-size:12px;color:var(--mut);font-weight:600;margin-top:-2px}
+.heart{position:absolute;bottom:7px;right:7px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.92);color:#c92a5b;font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.heart.on{background:var(--pink);color:#fff}
+.histbtn{margin:6px 10px 0;align-self:flex-start;font:inherit;font-size:11px;padding:5px 9px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--mut);cursor:pointer}
+.histbtn:hover{border-color:var(--brand);color:var(--brand)}
+.histbody{margin:8px 10px 10px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.histload,.histempty{font-size:12px;color:var(--mut);text-align:center;padding:14px 4px}
+.histsvg{width:100%;height:100px;display:block}
+.histline{stroke:var(--brand);stroke-width:1.6}
+.histarea{fill:var(--brand);opacity:.12;stroke:none}
+.histdot{fill:var(--pink)}
+.histlo-line{stroke:var(--mut);stroke-width:1;stroke-dasharray:3,3}
+.histlo-label{font-size:6.5px;fill:var(--mut)}
+.histaxis{font-size:6.5px;fill:var(--mut)}
+.histmeta{font-size:11px;color:var(--mut);margin-top:4px;text-align:center}
+#listview{padding:0 6px 50px}
+.store-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:22px 8px 4px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+.store-head h3{margin:0;font-size:16px}
+.store-head .savings{color:var(--mut);font-size:12.5px;font-weight:400}
+.addcart{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+.addcart:hover{background:var(--brand2)}
+.listnote{padding:8px 14px;color:var(--mut);font-size:13px}
+#watchbanner{padding:10px 14px;background:#e7f5ff;color:#1864ab;border-bottom:1px solid #a5d8ff;font-size:14px}
+#watchbanner a{color:#1864ab;font-weight:700;text-decoration:underline}
+@media (prefers-color-scheme: dark){#watchbanner{background:#16283a;color:#a5d8ff;border-color:#1c3a52}#watchbanner a{color:#a5d8ff}}
+/* --- mobile: keep the filters from eating the whole screen --- */
+@media (max-width:640px){
+  header{padding:12px 12px}
+  h1{font-size:18px}
+  .hbtns{gap:6px}
+  .mylist-btn{padding:7px 10px;font-size:12.5px}
+  /* controls scroll away instead of pinning a tall bar over the grid */
+  .controls{position:static;padding:8px 10px}
+  .row{gap:6px}
+  input[type=search]{flex-basis:100%;min-width:0}
+  select,.toggle,.reset{font-size:12.5px;padding:6px 9px}
+  .toggle.price input[type=range]{width:84px}
+  /* category chips become one swipeable row, not a 6-row wall */
+  .chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+         margin-top:8px;padding-bottom:6px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .count{padding:8px 12px 2px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:10px 10px 40px}
+}
+</style></head><body>
+<header>
+  <div class="hrow">
+    <div><h1>🧷 Papercraft Sales</h1><div class="sub" id="sub"></div></div>
+    <div class="hbtns">
+      <button class="mylist-btn" id="newBtn">🆕 New</button>
+      <button class="mylist-btn" id="coupBtn">🎟️ Codes</button>
+      <button class="mylist-btn" id="calBtn">📅 Calendar</button>
+      <button class="mylist-btn" id="thBtn">⭐ Tim Holtz</button>
+      <button class="mylist-btn" id="mylistBtn">♥ My List (0)</button>
+    </div>
+  </div>
+  <div id="events"></div>
+</header>
+<div id="watchbanner" style="display:none"></div>
+<div class="controls">
+  <div class="row">
+    <input type="search" id="q" placeholder="Search titles… (e.g. distress, stencil, snowman)">
+    <select id="shop"><option value="">All shops</option></select>
+    <select id="sort" class="dealonly">
+      <option value="best">Best deal</option>
+      <option value="pct">Biggest % off</option>
+      <option value="save">Most $ saved</option>
+      <option value="plow">Price: low → high</option>
+      <option value="new">Newest drops</option>
+    </select>
+    <label class="toggle"><input type="checkbox" id="th"> ⭐ Tim Holtz</label>
+    <label class="toggle dealonly"><input type="checkbox" id="newonly"> New today</label>
+    <label class="toggle dealonly"><input type="checkbox" id="retonly"> 🔥 Last Chance</label>
+    <label class="toggle dealonly"><input type="checkbox" id="bestonly"> 💰 Best price</label>
+    <label class="toggle price">Max <b id="priceval">Any</b>
+      <input type="range" id="price" min="5" max="105" step="5" value="105"></label>
+    <button class="reset" id="reset">Reset</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="chips themechips" id="themechips"></div>
+</div>
+<div class="count" id="count">Loading deals…</div>
+<div class="grid" id="grid"></div>
+<div id="listview" style="display:none"></div>
+<div id="thview" style="display:none"></div>
+<div id="newview" style="display:none"></div>
+<div id="coupview" style="display:none"></div>
+<div id="calview" style="display:none"></div>
+<script>
+const META = {"date_str": "Sunday, September 6, 2026", "build": "2026-09-06-1836", "stats": {"sites": 42, "variants": 111162, "drops": 22, "events": 5, "new_today": 258}, "events": [{"site": "Anna Griffin", "count": 46, "median_pct": 27, "max_pct": 38, "first": "2026-09-04", "last": "2026-09-04"}, {"site": "Crafter's Companion", "count": 99, "median_pct": 70, "max_pct": 76, "first": "2026-09-01", "last": "2026-09-01"}, {"site": "Michaels", "count": 38, "median_pct": 25, "max_pct": 34, "first": "2026-09-01", "last": "2026-09-01"}, {"site": "Echo Park", "count": 127, "median_pct": 50, "max_pct": 62, "first": "2026-08-31", "last": "2026-09-05"}, {"site": "Altenew", "count": 46, "median_pct": 30, "max_pct": 50, "first": "2026-08-31", "last": "2026-09-01"}], "discovered": [{"site": "Echo Park", "date": "2026-08-19", "m": 8, "count": 1752, "median_pct": 57}, {"site": "Crafter's Companion", "date": "2026-08-21", "m": 8, "count": 30, "median_pct": 60}, {"site": "Anna Griffin", "date": "2026-08-21", "m": 8, "count": 51, "median_pct": 36}, {"site": "Altenew", "date": "2026-08-22", "m": 8, "count": 40, "median_pct": 30}, {"site": "CraftDirect", "date": "2026-08-28", "m": 8, "count": 935, "median_pct": 40}, {"site": "Crafter's Companion", "date": "2026-09-01", "m": 9, "count": 99, "median_pct": 70}, {"site": "Altenew", "date": "2026-09-01", "m": 9, "count": 42, "median_pct": 25}, {"site": "Echo Park", "date": "2026-09-01", "m": 9, "count": 127, "median_pct": 50}, {"site": "Michaels", "date": "2026-09-01", "m": 9, "count": 38, "median_pct": 25}, {"site": "CraftDirect", "date": "2026-09-03", "m": 9, "count": 271, "median_pct": 20}, {"site": "Simon Says Stamp", "date": "2026-09-03", "m": 9, "count": 26, "median_pct": 58}, {"site": "Anna Griffin", "date": "2026-09-04", "m": 9, "count": 46, "median_pct": 27}], "watchUrl": "https://media-hub-api.agreiter81.workers.dev/api/papercraft-watch", "watchToken": "eb36a82daf90accfc7a66193a0d3e005bbaa64d8"};
+let ALL = [], view = [], shown = 0, BATCH = 120, byUrl = {}, XSTORE = {};
+const state = { q:"", cats:new Set(), themes:new Set(), shop:"", th:false, newonly:false, retonly:false, bestonly:false, maxp:Infinity, sort:"best" };
+const $ = s => document.querySelector(s);
+
+// "new today" = the New-today filter's population (rolling-24h drops + rotating
+// Daily Deals), not just this single run's diff — so the header never reads
+// "0 new" while the filter is actually full.
+const _nt = (META.stats.new_today != null ? META.stats.new_today : META.stats.drops) || 0;
+document.getElementById("sub").textContent =
+  `${META.date_str} · ${META.stats.sites} shops · ${_nt} new today`;
+if (META.events && META.events.length){
+  document.getElementById("events").innerHTML = META.events.map(e =>
+    `<div class="event" data-shop="${e.site.replace(/"/g,'&quot;')}" role="button" tabindex="0" title="Show all ${e.site} deals">`
+    + `🚨 <b>${e.site}</b> — ${e.count} markdowns (median ${e.median_pct}% off). Looks like a clearance event. `
+    + `<span class="ev-go">Shop all ${e.site} →</span></div>`).join("");
+}
+
+// Give a saved item today's cross-store note. Items still on sale carry fresh
+// annotate data from the grid (byUrl) already; off-grid saves get it from
+// XSTORE — which also CLEARS any note frozen in at save time so it never goes
+// stale. cheap=1 means the saved copy still beats (or ties) the cheapest twin.
+function applyXStore(d){
+  const x = XSTORE[d.u];
+  if(x){ d.ms = x.n; d.chs = x.s; d.chp = x.p; d.cheap = (d.p <= x.p + 0.01) ? 1 : 0; }
+  else { delete d.ms; delete d.chs; delete d.chp; delete d.cheap; }
+  return d;
+}
+
+Promise.all([
+  fetch("deals.json?v="+META.build).then(r=>r.json()),
+  fetch("xstore.json?v="+META.build).then(r=>r.json()).catch(()=>({})),
+]).then(([data, xs])=>{
+  ALL = data; XSTORE = xs || {};
+  ALL.forEach(d=>byUrl[d.u]=d);
+  // refresh saved items to today's data but KEEP the price when first saved (sp)
+  Object.keys(SAVED).forEach(u=>{
+    if(byUrl[u]) SAVED[u] = {...byUrl[u], sp: (SAVED[u].sp ?? byUrl[u].p)};
+    else applyXStore(SAVED[u]);   // off-grid save: fresh cross-store note (or clear)
+  });
+  persist();
+  buildShops(); buildChips(); buildThemeChips(); updateBtn(); watchBanner(); syncWatch(); apply();
+}).catch(()=>{ document.getElementById("count").textContent="Couldn't load deals."; });
+
+function buildShops(){
+  const shops = [...new Set(ALL.map(d=>d.s))].sort();
+  const sel = $("#shop");
+  shops.forEach(s=>{ const o=document.createElement("option"); o.value=s; o.textContent=s; sel.appendChild(o); });
+}
+function buildChips(){
+  const counts = {};
+  ALL.forEach(d=>counts[d.g]=(counts[d.g]||0)+1);
+  const cats = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
+  const box = $("#chips");
+  cats.forEach(c=>{
+    const el=document.createElement("button");
+    el.className="chip"; el.dataset.cat=c;
+    el.innerHTML=`${c}<span class="n">${counts[c]}</span>`;
+    el.onclick=()=>{ el.classList.toggle("on");
+      if(state.cats.has(c)) state.cats.delete(c); else state.cats.add(c); apply(); };
+    box.appendChild(el);
+  });
+}
+function buildThemeChips(){
+  const counts = {};
+  ALL.forEach(d=>themesOf(d).forEach(t=>counts[t]=(counts[t]||0)+1));
+  const box = $("#themechips");
+  const themes = THEMES.map(x=>x.name).filter(t=>counts[t]);   // only themes that occur
+  themes.sort((a,b)=>counts[b]-counts[a]);
+  if(!themes.length){ box.style.display="none"; return; }
+  box.innerHTML = '<span class="chiplabel">Themes</span>';
+  themes.forEach(t=>{
+    const el=document.createElement("button");
+    el.className="chip theme"; el.dataset.theme=t;
+    el.innerHTML=`${t}<span class="n">${counts[t]}</span>`;
+    el.onclick=()=>{ el.classList.toggle("on");
+      if(state.themes.has(t)) state.themes.delete(t); else state.themes.add(t); apply(); };
+    box.appendChild(el);
+  });
+}
+function updateThemeCounts(base){
+  const counts = {};
+  base.forEach(d=>themesOf(d).forEach(t=>counts[t]=(counts[t]||0)+1));
+  document.querySelectorAll("#themechips .chip").forEach(el=>{
+    const t = el.dataset.theme, n = counts[t]||0;
+    el.querySelector(".n").textContent = n;
+    el.classList.toggle("zero", n===0 && !state.themes.has(t));
+  });
+}
+function score(d){ return d.d * Math.sqrt(d.p); }
+const sorters = {
+  best:(a,b)=>score(b)-score(a),
+  pct:(a,b)=>b.d-a.d,
+  save:(a,b)=>(b.c-b.p)-(a.c-a.p),
+  plow:(a,b)=>a.p-b.p,
+  new:(a,b)=>b.n-a.n || score(b)-score(a),
+};
+// Themes are a SECOND filter axis (a product can be both "Dies" and "Halloween"),
+// derived from the title client-side so no re-scrape is needed. A product can carry
+// several themes; theme chips OR within themselves and AND with the category chips.
+const THEMES = [
+  {name:"🎄 Christmas",  re:/\b(christmas|xmas|santa|snowman|reindeer|holly|noel|nativity|advent|sleigh|gingerbread|mistletoe|elf|jingle)\b/i},
+  {name:"🎃 Halloween",  re:/\b(halloween|spooky|ghost|pumpkins?|witch|bats?|skeletons?|haunted|spider|cauldron|frankenstein)\b/i},
+  {name:"🦃 Thanksgiving",re:/\b(thanksgiving|turkey|grateful|thankful|harvest|cornucopia)\b/i},
+  {name:"🍂 Fall",       re:/\b(fall|autumn|leaves|maple|acorns?|sunflowers?)\b/i},
+  {name:"❄️ Winter",     re:/\b(winter|snowflakes?|snowy|frost|penguins?|mittens?|igloo|polar)\b/i},
+  {name:"💗 Valentine",  re:/\b(valentine|cupid|xoxo|sweetheart)\b/i},
+  {name:"🐰 Easter",     re:/\b(easter|bunny|bunnies|chicks?|peeps)\b/i},
+  {name:"🌸 Spring",     re:/\b(spring|blossoms?|butterfl(?:y|ies)|tulips?|daffodils?|umbrella)\b/i},
+  {name:"☀️ Summer",     re:/\b(summer|beach|ocean|tropical|flamingos?|pineapples?|nautical|mermaids?|seashells?|popsicles?)\b/i},
+  {name:"🎂 Birthday",   re:/\b(birthday|cakes?|balloons?|confetti|cheers)\b/i},
+  {name:"👶 Baby",       re:/\b(baby|newborn|nursery|stork|onesie)\b/i},
+  {name:"💍 Wedding",    re:/\b(wedding|bride|groom|marriage|anniversary)\b/i},
+  {name:"🇺🇸 Patriotic",  re:/\b(patriotic|americana|independence|stars.{0,4}stripes|veterans?|fourth of july|4th of july)\b/i},
+  {name:"🌷 Floral",     re:/\b(floral|flowers?|roses?|peon(?:y|ies)|bouquet|botanicals?)\b/i},
+  {name:"🏰 Disney",     re:/\b(disney|mickey|minnie|winnie the pooh|\bpooh\b|tinker.?bell|cinderella|elsa|\bfrozen\b|\bstitch\b|dumbo|pixar|toy story|mouse ears)\b/i},
+];
+function themesOf(d){
+  if(d._tm) return d._tm;
+  const t = (d.t||"").toLowerCase();
+  return (d._tm = THEMES.filter(x=>x.re.test(t)).map(x=>x.name));
+}
+const matchesCats   = d => !state.cats.size   || state.cats.has(d.g);
+const matchesThemes = d => !state.themes.size || themesOf(d).some(t=>state.themes.has(t));
+
+// every filter EXCEPT the category chips (so chip counts reflect the rest)
+function passesExceptCat(d){
+  const q = state.q.trim().toLowerCase();
+  if(state.th && !d.h) return false;
+  if(state.newonly && !d.n) return false;
+  if(state.retonly && !d.r) return false;
+  if(state.bestonly && d.ms && !d.cheap) return false;   // hide pricier duplicates
+  if(d.p > state.maxp) return false;
+  if(state.shop && d.s!==state.shop) return false;
+  if(q && !d.t.toLowerCase().includes(q) && !(d.b||"").toLowerCase().includes(q)) return false;
+  return true;
+}
+// New Releases uses the same search/shop/Tim-Holtz/price/category controls, but
+// the sale-only filters (New-today / Last Chance / Best price) don't apply to a
+// just-published item, so this predicate checks only the relevant subset. Same
+// `state`, no second control system — cat handled separately for chip counts.
+function passesNewExceptCat(d){
+  const q = state.q.trim().toLowerCase();
+  if(state.th && !d.h) return false;
+  if(d.p > state.maxp) return false;
+  if(state.shop && d.s!==state.shop) return false;
+  if(q && !d.t.toLowerCase().includes(q)) return false;
+  return true;
+}
+function updateChipCounts(base){
+  const counts = {};
+  base.forEach(d=>counts[d.g]=(counts[d.g]||0)+1);
+  document.querySelectorAll("#chips .chip").forEach(el=>{
+    const c = el.dataset.cat, n = counts[c]||0;
+    el.querySelector(".n").textContent = n;
+    el.classList.toggle("zero", n===0 && !state.cats.has(c));
+  });
+}
+function apply(){
+  if(mode==="new"){ renderNew(); return; }               // New view: same controls, own data
+  const passBase = ALL.filter(passesExceptCat);          // everything but the chip filters
+  // each chip row's counts reflect ALL other filters incl. the OTHER chip row
+  updateChipCounts(passBase.filter(matchesThemes));
+  updateThemeCounts(passBase.filter(matchesCats));
+  view = passBase.filter(d=>matchesCats(d) && matchesThemes(d)).sort(sorters[state.sort]);
+  shown=0; $("#grid").innerHTML="";
+  $("#count").textContent = view.length ? `${view.length.toLocaleString()} deals` : "";
+  if(!view.length){ $("#grid").innerHTML='<div class="empty">No deals match those filters. Try clearing some.</div>'; }
+  render();
+}
+function cardHTML(d){
+  const img = d.i ? `<img loading="lazy" src="${d.i}" alt="">` : "";
+  const lo = d.lo ? '<span class="low">LOWEST YET</span>' : "";
+  const nw = d.n ? '<span class="new">NEW</span>' : "";
+  const rt = d.r ? '<span class="lastchance">🔥 LAST CHANCE</span>' : "";
+  const dd = d.dd ? '<span class="daily">⏳ TODAY ONLY</span>' : "";
+  const th = d.h ? '<span class="th-tag">TIM HOLTZ</span>' : "";
+  const on = SAVED[d.u] ? " on" : "";
+  const best = (d.ms && d.cheap) ? `<span class="bestprice">💰 BEST OF ${d.ms}</span>` : "";
+  const cheaper = (d.ms && !d.cheap && d.chs !== d.s)
+    ? `<div class="cheaper">💰 $${d.chp.toFixed(2)} at ${esc(d.chs)}</div>` : "";
+  // price-history context: only when we've recorded it CHEAPER than today, so
+  // the note is actionable ("it's been lower"). When today IS the low, the
+  // LOWEST YET badge already says so.
+  const seen = (d.lp != null && d.lp < d.p - 0.001)
+    ? `<div class="hist">↘ was $${d.lp.toFixed(2)} on ${fmtDate(d.ld)}</div>` : "";
+  return `<div class="card">
+    <div class="thumb"><a href="${d.u}" target="_blank" rel="noopener">${img}</a>
+      <div class="badges-l"><span class="badge">-${d.d}%</span>${lo}${best}</div>
+      <div class="badges-r">${dd}${nw}${rt}</div>${th}
+      <button class="heart${on}" data-u="${encodeURIComponent(d.u)}" title="Save to My List">♥</button></div>
+    <a class="meta" href="${d.u}" target="_blank" rel="noopener"><div class="tt">${esc(d.t)}</div>
+    <div class="pr"><s>$${d.c.toFixed(2)}</s> <b>$${d.p.toFixed(2)}</b></div>${cheaper}${seen}
+    <div class="shop">${esc(d.s)}</div></a>
+    <button class="histbtn" data-k="${encodeURIComponent(d.u+'|'+(d.v||''))}" data-p="${d.p}">📈 Price history</button>
+    <div class="histbody" hidden></div>
+    </div>`;
+}
+function render(){
+  const g=$("#grid"); const next=view.slice(shown, shown+BATCH);
+  g.insertAdjacentHTML("beforeend", next.map(cardHTML).join(""));
+  shown += next.length;
+  const old = $("#moreBtn"); if(old) old.remove();
+  if(shown < view.length){
+    const b=document.createElement("button"); b.id="moreBtn"; b.className="more";
+    b.textContent=`Show more (${(view.length-shown).toLocaleString()} left)`;
+    b.onclick=render; g.after(b);
+    if(mode!=="browse") b.style.display="none";   // only visible while browsing
+  }
+}
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ---- wishlist ("My List") --------------------------------------------------
+let SAVED = {}, mode = "browse";
+try { SAVED = JSON.parse(localStorage.getItem("pcw_saved")||"{}"); } catch(e){}
+function persist(){ localStorage.setItem("pcw_saved", JSON.stringify(SAVED)); }
+function host(u){ try { return new URL(u).host; } catch(e){ return ""; } }
+// one-click add-to-cart + checkout link (Shopify); else the product page
+function buyLink(d){ return d.v ? `https://${host(d.u)}/cart/${d.v}:1` : d.u; }
+function updateBtn(){
+  const n = Object.keys(SAVED).length;
+  $("#mylistBtn").textContent = mode==="list" ? "← Browsing" : `♥ My List (${n})`;
+  $("#thBtn").textContent = mode==="th" ? "← Browsing" : "⭐ Tim Holtz";
+  $("#newBtn").textContent = mode==="new" ? "← Browsing" : "🆕 New";
+  $("#coupBtn").textContent = mode==="coup" ? "← Browsing" : "🎟️ Codes";
+  $("#calBtn").textContent = mode==="cal" ? "← Browsing" : "📅 Calendar";
+}
+function toggleSave(u){
+  if(SAVED[u]) delete SAVED[u];
+  else if(byUrl[u]){ SAVED[u] = {...byUrl[u], sp: byUrl[u].p};   // remember price at save
+    if(SAVED[u].ms==null) applyXStore(SAVED[u]); }   // off-grid (e.g. New): add cross-store note
+  persist(); syncWatch(); updateBtn(); watchBanner();
+  document.querySelectorAll(`.heart[data-u="${CSS.escape(encodeURIComponent(u))}"]`)
+    .forEach(h=>h.classList.toggle("on", !!SAVED[u]));
+  if(mode==="list") renderList();
+}
+// sync the wishlist to the worker so the tracker can email when a saved item drops
+let syncTimer = null;
+function syncWatch(){
+  if(!META.watchUrl || !META.watchToken) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=>{
+    const list = Object.values(SAVED).map(d=>({u:d.u, sp:d.sp, t:d.t, s:d.s}));
+    fetch(META.watchUrl, {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({token: META.watchToken, list})}).catch(()=>{});
+  }, 800);
+}
+// in-page alert: saved items that dropped below their save price
+function watchBanner(){
+  const el = $("#watchbanner"); if(!el) return;
+  const dropped = Object.values(SAVED).filter(d=>byUrl[d.u] && d.sp && byUrl[d.u].p < d.sp - 0.01);
+  if(!dropped.length){ el.style.display="none"; return; }
+  el.style.display = "";
+  el.innerHTML = `🔔 <b>${dropped.length}</b> of your saved item${dropped.length>1?"s":""} `
+    + `dropped in price since you saved ${dropped.length>1?"them":"it"}! `
+    + `<a href="#list" id="wblink">See My List →</a>`;
+  const l=$("#wblink"); if(l) l.onclick=(e)=>{ e.preventDefault(); nav("list"); };
+}
+// heart clicks (event delegation, works for grid + list)
+document.body.addEventListener("click", e=>{
+  const h = e.target.closest(".heart");
+  if(!h) return;
+  e.preventDefault(); e.stopPropagation();
+  toggleSave(decodeURIComponent(h.dataset.u));
+});
+
+// ---- price history chart (click-to-expand, lazy-loaded) -------------------
+let HIST = null, histPromise = null;
+function loadHist(){
+  if(HIST) return Promise.resolve(HIST);
+  if(!histPromise) histPromise = fetch("price_hist.json?v="+META.build)
+    .then(r=>r.json()).catch(()=>({})).then(d=>{ HIST=d; return d; });
+  return histPromise;
+}
+function toggleHist(btn){
+  const card = btn.closest(".card");
+  const body = card.querySelector(".histbody");
+  if(!body.hidden){ body.hidden = true; btn.textContent = "📈 Price history"; return; }
+  body.hidden = false;
+  btn.textContent = "📈 Hide history";
+  if(body.dataset.loaded) return;
+  body.innerHTML = '<div class="histload">Loading…</div>';
+  const k = decodeURIComponent(btn.dataset.k);   // url|variant — this exact variant's history
+  loadHist().then(hist=>{
+    body.innerHTML = histChartSVG(hist[k], {p: parseFloat(btn.dataset.p)});
+    body.dataset.loaded = "1";
+  });
+}
+document.body.addEventListener("click", e=>{
+  const b = e.target.closest(".histbtn");
+  if(!b) return;
+  e.preventDefault(); e.stopPropagation();
+  toggleHist(b);
+});
+// Amazon/Keepa-style step chart: price holds flat between recorded change
+// points, and the last known price is extended out to today. Series is
+// change-based (a new point only when the price moves) and starts sparse —
+// with <2 points there's no line to draw yet, so show a collecting message.
+function histChartSVG(h, d){
+  if(!h || !h.s || h.s.length < 2){
+    return '<div class="histempty">Still collecting price history for this item — check back in a few weeks.</div>';
+  }
+  const W=300, H=110, PAD_L=34, PAD_R=8, PAD_T=10, PAD_B=16;
+  const pts = h.s.map(p=>[new Date(p[0]+"T00:00").getTime(), p[1]]);
+  const todayMs = new Date(new Date().toISOString().slice(0,10)+"T00:00").getTime();
+  if(pts[pts.length-1][0] < todayMs) pts.push([todayMs, pts[pts.length-1][1]]);
+  const xs = pts.map(p=>p[0]);
+  let x0 = Math.min(...xs), x1 = Math.max(...xs);
+  if(x1===x0) x1 = x0 + 86400000;
+  const prices = pts.map(p=>p[1]);
+  const lo = h.lo!=null ? Math.min(h.lo, ...prices) : Math.min(...prices);
+  const hi = h.hi!=null ? Math.max(h.hi, ...prices) : Math.max(...prices);
+  const padY = (hi-lo)*0.15 || Math.max(hi*0.1, 0.5);
+  const yMin = Math.max(0, lo-padY), yMax = hi+padY || 1;
+  const x = t => PAD_L + (t-x0)/(x1-x0) * (W-PAD_L-PAD_R);
+  const y = p => PAD_T + (1 - (p-yMin)/(yMax-yMin)) * (H-PAD_T-PAD_B);
+  let path = `M ${x(pts[0][0]).toFixed(1)} ${y(pts[0][1]).toFixed(1)}`;
+  for(let i=1;i<pts.length;i++){
+    path += ` L ${x(pts[i][0]).toFixed(1)} ${y(pts[i-1][1]).toFixed(1)}`;
+    path += ` L ${x(pts[i][0]).toFixed(1)} ${y(pts[i][1]).toFixed(1)}`;
+  }
+  const floorY = (H-PAD_B).toFixed(1);
+  const areaPath = `${path} L ${x(pts[pts.length-1][0]).toFixed(1)} ${floorY} L ${x(pts[0][0]).toFixed(1)} ${floorY} Z`;
+  const curX = x(pts[pts.length-1][0]).toFixed(1), curY = y(pts[pts.length-1][1]).toFixed(1);
+  const loLine = h.lo!=null
+    ? `<line x1="${PAD_L}" y1="${y(h.lo).toFixed(1)}" x2="${(W-PAD_R).toFixed(1)}" y2="${y(h.lo).toFixed(1)}" class="histlo-line"/>
+       <text x="${(W-PAD_R).toFixed(1)}" y="${(y(h.lo)-3).toFixed(1)}" class="histlo-label" text-anchor="end">low $${h.lo.toFixed(2)}</text>` : "";
+  const firstDate = fmtDate(new Date(x0).toISOString().slice(0,10));
+  const lastDate = fmtDate(new Date(x1).toISOString().slice(0,10));
+  const metaBits = [`Current <b>$${d.p.toFixed(2)}</b>`];
+  if(h.hi!=null) metaBits.push(`High $${h.hi.toFixed(2)}`);
+  if(h.lo!=null) metaBits.push(`Low $${h.lo.toFixed(2)}${h.lod?` on ${fmtDate(h.lod)}`:""}`);
+  return `<svg class="histsvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <path d="${areaPath}" class="histarea"/>
+    <path d="${path}" class="histline" fill="none"/>
+    ${loLine}
+    <circle cx="${curX}" cy="${curY}" r="2.6" class="histdot"/>
+    <text x="${PAD_L}" y="${H-4}" class="histaxis">${firstDate}</text>
+    <text x="${(W-PAD_R).toFixed(1)}" y="${H-4}" text-anchor="end" class="histaxis">${lastDate}</text>
+  </svg>
+  <div class="histmeta">${metaBits.join(" · ")}</div>`;
+}
+function renderList(){
+  const items = Object.values(SAVED);
+  const lv = $("#listview");
+  if(!items.length){ lv.innerHTML='<div class="empty">Your list is empty. Tap the ♥ on any deal to save it here.</div>'; return; }
+  const byStore = {};
+  items.forEach(d=>(byStore[d.s]=byStore[d.s]||[]).push(d));
+  let html = `<div class="listnote">${items.length} saved item${items.length>1?"s":""}. Each shop is a separate checkout — the button adds that shop's items to its cart.</div>`;
+  Object.keys(byStore).sort().forEach(s=>{
+    const list = byStore[s];
+    const saved = list.reduce((a,d)=>a+(d.c-d.p),0);
+    const shopify = list.filter(d=>d.v);
+    let btn = "";
+    if(shopify.length){
+      const h = host(shopify[0].u);
+      const cart = `https://${h}/cart/${shopify.map(d=>d.v+":1").join(",")}`;
+      btn = `<a class="addcart" href="${cart}" target="_blank" rel="noopener">🛒 Add all ${shopify.length} to ${esc(s)}'s cart →</a>`;
+    }
+    html += `<div class="store-head"><h3>${esc(s)} <span class="savings">· ${list.length} item${list.length>1?"s":""} · save $${saved.toFixed(2)}</span></h3>${btn}</div>`;
+    html += `<div class="grid">${list.map(cardHTML).join("")}</div>`;
+  });
+  lv.innerHTML = html;
+}
+// ---- Tim Holtz hub ---------------------------------------------------------
+function renderTH(){
+  const th = ALL.filter(d=>d.h);
+  const tv = $("#thview");
+  if(!th.length){ tv.innerHTML='<div class="empty">No Tim Holtz items on sale right now.</div>'; return; }
+  const shops = new Set(th.map(d=>d.s)).size;
+  const nnew = th.filter(d=>d.n).length, nret = th.filter(d=>d.r).length;
+  const byCat = {};
+  th.forEach(d=>(byCat[d.g]=byCat[d.g]||[]).push(d));
+  const cats = Object.keys(byCat).sort((a,b)=>byCat[b].length-byCat[a].length);
+  let extras = "";
+  if(nret) extras += `🔥 ${nret} last chance · `;
+  if(nnew) extras += `🆕 ${nnew} new · `;
+  let html = `<div class="thintro"><h2>⭐ Tim Holtz — ${th.length} deals</h2>
+    <p>Across ${shops} shops (Ranger, Sizzix, Simon Says &amp; more): Distress inks, Idea-ology,
+    Sizzix dies, Dylusions and more. ${extras}tap ♥ on any to save it.</p></div>`;
+  const CAP = 18;
+  cats.forEach(c=>{
+    const list = byCat[c].slice().sort(sorters.best);
+    html += `<div class="store-head"><h3>${esc(c)} <span class="savings">· ${list.length}</span></h3></div>`;
+    html += `<div class="grid">${list.slice(0,CAP).map(cardHTML).join("")}</div>`;
+    if(list.length>CAP) html += `<button class="more thmore" data-cat="${esc(c)}">See all ${list.length} ${esc(c)} →</button>`;
+  });
+  tv.innerHTML = html;
+  tv.querySelectorAll(".thmore").forEach(b=>b.onclick=()=>{      // jump to browse, TH + this category
+    state.th = true; state.cats = new Set([b.dataset.cat]);
+    $("#th").checked = true;
+    document.querySelectorAll("#chips .chip").forEach(ch=>ch.classList.toggle("on", ch.dataset.cat===b.dataset.cat));
+    goBrowse(); apply();
+  });
+}
+// ---- New Releases ----------------------------------------------------------
+let NEW = null;
+function fmtDate(s){ const d=new Date(s+"T00:00"); return isNaN(d)?"":d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+function newCardHTML(d){
+  const img = d.i ? `<img loading="lazy" src="${d.i}" alt="">` : "";
+  const th = d.h ? '<span class="th-tag">TIM HOLTZ</span>' : "";
+  const on = SAVED[d.u] ? " on" : "";
+  return `<div class="card">
+    <div class="thumb"><a href="${d.u}" target="_blank" rel="noopener">${img}</a>
+      <div class="badges-l"><span class="new">🆕 NEW</span></div>${th}
+      <button class="heart${on}" data-u="${encodeURIComponent(d.u)}" title="Save to My List">♥</button></div>
+    <a class="meta" href="${d.u}" target="_blank" rel="noopener"><div class="tt">${esc(d.t)}</div>
+    <div class="pr"><b>$${d.p.toFixed(2)}</b></div>
+    <div class="shop">${esc(d.s)} · ${fmtDate(d.pub)}</div></a></div>`;
+}
+function renderNew(){
+  const nv = $("#newview");
+  if(NEW === null){
+    nv.innerHTML = '<div class="listnote">Loading new releases…</div>';
+    fetch("new.json?v="+META.build).then(r=>r.json()).then(data=>{
+      NEW = data;
+      NEW.forEach(d=>{ if(!byUrl[d.u]) byUrl[d.u]={t:d.t,u:d.u,i:d.i,p:d.p,c:d.p,d:0,g:d.g,s:d.s,h:d.h,v:"",n:0,r:0}; });
+      renderNew();
+    }).catch(()=>{ nv.innerHTML='<div class="empty">Couldn\'t load new releases.</div>'; });
+    return;
+  }
+  if(!NEW.length){ nv.innerHTML='<div class="empty">No new releases spotted in the last 45 days.</div>'; return; }
+  // same filter bar as browse: search / shop / Tim Holtz / max price + category & theme chips
+  const passBase = NEW.filter(passesNewExceptCat);
+  updateChipCounts(passBase.filter(matchesThemes));       // chips now reflect NEW, not deals
+  updateThemeCounts(passBase.filter(matchesCats));
+  const list = passBase.filter(d=>matchesCats(d) && matchesThemes(d));
+  const today = new Date();
+  const daysAgo = s => Math.floor((today - new Date(s+"T00:00")) / 86400000);
+  // One bucket per day: Today, Yesterday, then the explicit calendar date
+  // (e.g. "August 21") for each older day out to a week back — instead of
+  // lumping everything older than yesterday into one "Earlier this week".
+  const dayLabel = k => {
+    if(k===0) return "Today";
+    if(k===1) return "Yesterday";
+    const d = new Date(today); d.setDate(d.getDate()-k);
+    return d.toLocaleDateString(undefined,{month:"long",day:"numeric"});
+  };
+  const buckets = [];
+  for(let k=0;k<8;k++) buckets.push([dayLabel(k),k,k+1]);
+  let html = `<div class="thintro"><h2>🆕 New Releases — ${list.length}</h2>`
+    + `<p>Just-published products across your shops (past week), newest first. Filter by category, shop or search just like the main grid. Heart one to watch it for a future price drop.</p></div>`;
+  let any = false;
+  buckets.forEach(([label,lo,hi])=>{
+    const items = list.filter(d=>{ const a=daysAgo(d.pub); return a>=lo && a<hi; });
+    if(!items.length) return;
+    any = true;
+    html += `<div class="store-head"><h3>${label} <span class="savings">· ${items.length}</span></h3></div>`;
+    html += `<div class="grid">${items.map(newCardHTML).join("")}</div>`;
+  });
+  if(!any) html += '<div class="empty">No new releases match those filters. Try clearing some.</div>';
+  nv.innerHTML = html;
+}
+
+// ---- Sale Calendar (curated predictable events) ----------------------------
+const CALENDAR = [
+  {m:1,  name:"New Year Cleanout", shops:"Simon Says Stamp, Altenew", note:"Post-holiday warehouse clearance on past-season stamps, dies & inks."},
+  {m:3,  name:"SBC Fest (Spring)", shops:"Scrapbook.com", note:"Virtual crafting event: tiered cart discounts + free bundle add-ons."},
+  {m:4,  name:"Spring Warehouse Sale", shops:"Spellbinders", note:"Deep clearance on previous-year die lines & Glimmer hot foil plates."},
+  {m:5,  name:"Semi-Annual / Memorial Day", shops:"Sizzix, Scrapbook.com, A Cherry On Top", note:"Mid-year warehouse outlet — die sets, embossing folders, paper pads."},
+  {m:9,  name:"STAMPtember®", shops:"Simon Says Stamp", note:"The biggest event: daily limited collab stamp sets + sitewide codes."},
+  {m:9,  name:"SBC Fest (Fall)", shops:"Scrapbook.com", note:"Fall virtual event weekend with sitewide sales."},
+  {m:10, name:"Fall Warehouse Clearance", shops:"Spellbinders", note:"Major clearance right before the holiday releases drop."},
+  {m:11, name:"Black Friday / Cyber Week", shops:"Every shop", note:"Deepest discounts of the year — doorbusters, mystery boxes, machine bundles."},
+  {m:12, name:"DieCember®", shops:"Simon Says Stamp", note:"Standalone dies, die bundles & cardstock deals."},
+  {m:0,  name:"Warehouse, birthday & anniversary sales (dates vary)", shops:"Altenew, Pinkfresh, Honey Bee, Concord & 9th, Trinity, Lawn Fawn", note:"Most brands run 1–2 warehouse or birthday sales a year — the 🚨/🔥 alerts will catch these."},
+];
+function renderCal(){
+  const cv = $("#calview");
+  const months = ["","January","February","March","April","May","June","July","August","September","October","November","December"];
+  const nowM = new Date().getMonth()+1, nextM = (nowM % 12) + 1;
+  // sales we DISCOVERED by scraping (persisted event history) become dated
+  // calendar entries so a warehouse sale spotted this year is on the radar next.
+  const monYr = s => { const d=new Date(s+"T00:00"); return isNaN(d)?s:d.toLocaleDateString(undefined,{month:"short",year:"numeric"}); };
+  const disc = (META.discovered||[]).map(d=>({
+    m:d.m, name:`${d.site} clearance`, shops:d.site, discovered:true,
+    note:`🔍 Spotted ${monYr(d.date)}: ${d.count.toLocaleString()} markdowns, median ${d.median_pct}% off — watch for it again around now next year.`}));
+  let html = `<div class="thintro"><h2>📅 Sale Calendar</h2>`
+    + `<p>Predictable annual sale events plus ones we've <b>spotted live</b> (🔍) worth budgeting for. Highlighted = this month or next.</p></div>`;
+  [...CALENDAR, ...disc].sort((a,b)=>(a.m||13)-(b.m||13)).forEach(e=>{
+    const soon = e.m===nowM || e.m===nextM;
+    html += `<div class="calrow${soon?' soon':''}${e.discovered?' disc':''}">
+      <div class="calmon">${e.m?months[e.m]:"Varies"}</div>
+      <div class="calbody"><b>${esc(e.name)}</b>${e.discovered?'<span class="disctag">spotted live</span>':''}${soon?'<span class="soontag">up next</span>':''}
+      <div class="calshops">${esc(e.shops)}</div><div class="calnote">${e.note}</div></div></div>`;
+  });
+  cv.innerHTML = html;
+}
+
+// ---- Coupon codes (site-wide promo codes the price engine can't see) -------
+let COUP = null;
+function couponHTML(c){
+  const offer = c.offer ? esc(c.offer) : "Site-wide code — check terms at checkout";
+  const tag = c.via ? '<span class="ctag">CREATOR</span>' : "";
+  const via = c.via ? `<div class="cvia">👤 via ${esc(c.via)}</div>` : "";
+  return `<div class="coup${c.via ? ' creator' : ''}"><div class="cshop">${esc(c.shop)}${tag}</div>
+    <div class="coffer">${offer}</div>${via}
+    <div class="coupcode"><code>${esc(c.code)}</code>
+      <button class="copybtn" data-code="${esc(c.code)}">Copy</button></div>
+    <a class="cvisit" href="https://${esc(c.domain)}/" target="_blank" rel="noopener">Shop ${esc(c.shop)} →</a></div>`;
+}
+function renderCoupons(){
+  const cv = $("#coupview");
+  if(COUP === null){
+    cv.innerHTML = '<div class="listnote">Looking for codes…</div>';
+    fetch("coupons.json?v="+META.build).then(r=>r.json()).then(data=>{ COUP=data; renderCoupons(); })
+      .catch(()=>{ cv.innerHTML='<div class="empty">Couldn\'t load codes.</div>'; });
+    return;
+  }
+  let html = `<div class="thintro"><h2>🎟️ Coupon Codes — ${COUP.length}</h2>`
+    + `<p>Site-wide promo codes spotted on store homepages, plus 👤 <b>creator codes</b> from crafters you follow (these credit them when you use them). All stack on top of sale prices at checkout — the deal grid can't see them because a code never changes a product's listed price. Best-effort: verify terms at checkout.</p></div>`;
+  if(!COUP.length){ cv.innerHTML = html + '<div class="empty">No live codes spotted right now. Check back — this refreshes every run.</div>'; return; }
+  html += `<div class="coupgrid">${COUP.map(couponHTML).join("")}</div>`;
+  cv.innerHTML = html;
+}
+$("#coupview").addEventListener("click", e=>{
+  const b = e.target.closest(".copybtn"); if(!b) return;
+  const code = b.dataset.code;
+  (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject())
+    .then(()=>{ b.textContent="Copied ✓"; b.classList.add("done"); setTimeout(()=>{ b.textContent="Copy"; b.classList.remove("done"); }, 1500); })
+    .catch(()=>{ b.textContent=code; });
+});
+
+const VIEWS = {list:"#listview", th:"#thview", new:"#newview", coup:"#coupview", cal:"#calview"};
+const RENDER = {list:()=>renderList(), th:()=>renderTH(), new:()=>renderNew(), coup:()=>renderCoupons(), cal:()=>renderCal()};
+function setMode(m){          // pure UI switch, no history side-effects
+  mode = m;
+  const browse = m==="browse";
+  const filtered = browse || m==="new";        // views that share the filter bar
+  document.body.classList.toggle("mnew", m==="new");
+  $(".controls").style.display = filtered ? "" : "none";
+  $("#count").style.display = browse ? "" : "none";
+  $("#grid").style.display = browse ? "" : "none";
+  const mb=$("#moreBtn"); if(mb) mb.style.display = browse ? "" : "none";
+  for(const k in VIEWS) $(VIEWS[k]).style.display = (m===k) ? "" : "none";
+  if(browse) apply();          // rebuild grid + reset chip counts to the deals data
+  else if(RENDER[m]) RENDER[m]();
+  updateBtn();
+  window.scrollTo(0,0);
+}
+// browser Back/Forward move between browse and the special views
+function goBrowse(){ if(mode!=="browse"){ history.pushState({v:"browse"}, "", location.pathname+location.search); setMode("browse"); } }
+function nav(m){
+  if(mode===m){ goBrowse(); return; }
+  history.pushState({v:m}, "", "#"+m); setMode(m);
+}
+$("#mylistBtn").onclick = ()=> nav("list");
+$("#thBtn").onclick = ()=> nav("th");
+$("#newBtn").onclick = ()=> nav("new");
+$("#coupBtn").onclick = ()=> nav("coup");
+$("#calBtn").onclick = ()=> nav("cal");
+// clearance-event banner → jump straight to that store's deals (clears other filters)
+function shopFilterTo(shop){
+  Object.assign(state, {q:"", th:false, newonly:false, retonly:false, bestonly:false, maxp:Infinity, sort:"best"});
+  state.cats.clear(); state.themes.clear(); state.shop = shop;
+  $("#q").value=""; $("#shop").value=shop; $("#sort").value="best";
+  $("#th").checked=false; $("#newonly").checked=false; $("#retonly").checked=false; $("#bestonly").checked=false;
+  $("#price").value=105; $("#priceval").textContent="Any";
+  document.querySelectorAll(".chip.on").forEach(c=>c.classList.remove("on"));
+  goBrowse(); apply();
+}
+$("#events").addEventListener("click", e=>{
+  const ev = e.target.closest(".event"); if(ev) shopFilterTo(ev.dataset.shop);
+});
+$("#events").addEventListener("keydown", e=>{
+  if(e.key!=="Enter" && e.key!==" ") return;
+  const ev = e.target.closest(".event"); if(ev){ e.preventDefault(); shopFilterTo(ev.dataset.shop); }
+});
+window.addEventListener("popstate", e=>{
+  const h = location.hash.replace("#","");
+  const v = (e.state && e.state.v) || (VIEWS[h] ? h : "browse");
+  setMode(v);
+});
+{ const h = location.hash.replace("#",""); if(VIEWS[h]) setMode(h); }
+$("#q").oninput = e=>{ state.q=e.target.value; apply(); };
+$("#shop").onchange = e=>{ state.shop=e.target.value; apply(); };
+$("#sort").onchange = e=>{ state.sort=e.target.value; apply(); };
+$("#th").onchange = e=>{ state.th=e.target.checked; apply(); };
+$("#newonly").onchange = e=>{ state.newonly=e.target.checked; apply(); };
+$("#retonly").onchange = e=>{ state.retonly=e.target.checked; apply(); };
+$("#bestonly").onchange = e=>{ state.bestonly=e.target.checked; apply(); };
+$("#price").oninput = e=>{ const v=+e.target.value;
+  state.maxp = v>=105 ? Infinity : v;
+  $("#priceval").textContent = v>=105 ? "Any" : ("$"+v);
+  apply(); };
+$("#reset").onclick = ()=>{
+  Object.assign(state, {q:"", shop:"", th:false, newonly:false, retonly:false, bestonly:false, maxp:Infinity, sort:"best"});
+  state.cats.clear(); state.themes.clear();
+  $("#q").value=""; $("#shop").value=""; $("#sort").value="best";
+  $("#th").checked=false; $("#newonly").checked=false; $("#retonly").checked=false; $("#bestonly").checked=false;
+  $("#price").value=105; $("#priceval").textContent="Any";
+  document.querySelectorAll(".chip.on").forEach(c=>c.classList.remove("on"));
+  apply();
+};
+</script></body></html>
